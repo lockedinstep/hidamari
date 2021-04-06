@@ -4,13 +4,22 @@ import time
 import os
 
 # Make sure that X11 is the backend. This makes sure Wayland reverts to XWayland.
-os.environ['GDK_BACKEND'] = "x11"
+os.environ["GDK_BACKEND"] = "x11"
+if os.environ.get("VIDEO_BACKEND") is None:
+    VIDEO_BACKEND = "mpv"
+else:
+    VIDEO_BACKEND = os.environ["VIDEO_BACKEND"]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--pause', type=int, default=0)
+    parser.add_argument("-p", "--pause", type=int, default=0)
     args = parser.parse_args()
     time.sleep(args.pause)
     # Do import after the sleep. (if not SIGSEGV during autostart)
-    from player import Player
+    if VIDEO_BACKEND == "mpv":
+        from player_mpv import Player
+    elif VIDEO_BACKEND == "vlc":
+        from player_vlc import Player
+    else:
+        raise RuntimeError("Unknown video backend!")
     Player()

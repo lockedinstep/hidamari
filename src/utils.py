@@ -158,7 +158,7 @@ class StaticWallpaperHandler:
     Handler for setting the static wallpaper
     """
 
-    def __init__(self):
+    def __init__(self, mpv_instance=None):
         self.config_handler = ConfigHandler(self._on_config_modified)
         self.config = self.config_handler.config
         self.current_video_path = self.config.video_path
@@ -167,6 +167,7 @@ class StaticWallpaperHandler:
         self.gso = Gio.Settings.new('org.gnome.desktop.background')
         self.ori_wallpaper_uri = self.gso.get_string('picture-uri')
         self.new_wallpaper_uri = '/tmp/hidamari.png'
+        self.mpv = mpv_instance
 
     def _on_config_modified(self):
         # Get new config
@@ -185,17 +186,23 @@ class StaticWallpaperHandler:
         self.current_static_wallpaper_blur_radius = self.config.static_wallpaper_blur_radius
 
     def set_static_wallpaper(self):
-        # Extract first frame (use ffmpeg)
+        # Extract first frame
         if self.config.static_wallpaper:
-            subprocess.call(
-                'ffmpeg -y -i "{}" -vframes 1 "{}" -loglevel quiet > /dev/null 2>&1 < /dev/null'.format(
-                    self.config.video_path, self.new_wallpaper_uri), shell=True)
-            if os.path.isfile(self.new_wallpaper_uri):
-                blur_wallpaper = Image.open(self.new_wallpaper_uri)
-                blur_wallpaper = blur_wallpaper.filter(
-                    ImageFilter.GaussianBlur(self.config.static_wallpaper_blur_radius))
-                blur_wallpaper.save(self.new_wallpaper_uri)
-                self.gso.set_string('picture-uri', pathlib.Path(self.new_wallpaper_uri).resolve().as_uri())
+            if self.mpv is not None:
+                # Use screenshot function from mpv
+                img = self.mpv.screenshot_raw()
+            else:
+                # Use ffmpeg
+                subprocess.call(
+                    'ffmpeg -y -i "{}" -vframes 1 "{}" -loglevel quiet > /dev/null 2>&1 < /dev/null'.format(
+                        self.config.video_path, self.new_wallpaper_uri), shell=True)
+                if os.path.isfile(self.new_wallpaper_uri):
+                    return
+                img = Image.open(self.new_wallpaper_uri)
+            blur_wallpaper = img.filter(
+                ImageFilter.GaussianBlur(self.config.static_wallpaper_blur_radius))
+            blur_wallpaper.save(self.new_wallpaper_uri)
+            self.gso.set_string('picture-uri', pathlib.Path(self.new_wallpaper_uri).resolve().as_uri())
 
     def restore_ori_wallpaper(self):
         self.gso.set_string('picture-uri', self.ori_wallpaper_uri)
