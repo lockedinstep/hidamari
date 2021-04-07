@@ -5,6 +5,7 @@ import os
 
 # Make sure that X11 is the backend. This makes sure Wayland reverts to XWayland.
 os.environ["GDK_BACKEND"] = "x11"
+
 if os.environ.get("VIDEO_BACKEND") is None:
     VIDEO_BACKEND = "mpv"
 else:

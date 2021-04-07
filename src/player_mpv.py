@@ -25,7 +25,7 @@ class MPVWidget(Gtk.DrawingArea):
 
     def __init__(self, width, height):
         Gtk.DrawingArea.__init__(self)
-        self.player = mpv.MPV(log_handler=print, input_cursor=False, pause=True, loop=True)
+        self.player = mpv.MPV(log_handler=print, input_cursor=False, pause=True, loop=True, gpu_context="x11", hwdec="auto")
 
         def handle_embed(*args):
             self.player.wid = self.get_window().get_xid()
@@ -56,6 +56,7 @@ class Player:
         self.width, self.height = self.monitor_detect()
 
         # We need to initialize X11 threads so we can use hardware decoding.
+        # TODO is this still necessary with `mpv`? Package `libX11-dev` need to be installed.
         x11 = ctypes.cdll.LoadLibrary("libX11.so")
         x11.XInitThreads()
 
