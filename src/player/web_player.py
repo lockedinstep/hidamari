@@ -13,12 +13,10 @@ try:
     import os
     sys.path.insert(1, os.path.join(sys.path[0], '..'))
     from player.base_player import BasePlayer
-    from menu import build_menu
     from commons import *
     from utils import ConfigUtil
 except ModuleNotFoundError:
     from hidamari.player.base_player import BasePlayer
-    from hidamari.menu import build_menu
     from hidamari.commons import *
     from hidamari.utils import ConfigUtil
 
@@ -32,9 +30,6 @@ class WebWindow(Gtk.ApplicationWindow):
         self.add(self.__webview)
         self.__webview.show()
 
-        self.menu = None
-        self.__webview.connect("button-press-event", self._on_button_press_event)
-
     def load_uri(self, uri):
         self.__webview.load_uri(uri)
 
@@ -43,14 +38,6 @@ class WebWindow(Gtk.ApplicationWindow):
 
     def reload(self):
         self.__webview.reload()
-
-    def _on_button_press_event(self, widget, event):
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
-            if not self.menu:
-                self.menu = build_menu(MODE_WEBPAGE)
-            self.menu.popup_at_pointer()
-            return True
-        return False
 
 
 class WebPlayer(BasePlayer):

@@ -12,15 +12,11 @@ try:
     from commons import *
     from player.video_player import main as video_player_main
     from player.web_player import main as web_player_main
-    from gui.control import main as gui_main
-    from menu import show_systray_icon
     from utils import ConfigUtil, EndSessionHandler, get_video_paths
 except ModuleNotFoundError:
     from hidamari.commons import *
     from hidamari.player.video_player import main as video_player_main
     from hidamari.player.web_player import main as web_player_main
-    from hidamari.gui.control import main as gui_main
-    from hidamari.menu import show_systray_icon
     from hidamari.utils import ConfigUtil, EndSessionHandler, get_video_paths
 
 loop = GLib.MainLoop()
@@ -45,7 +41,6 @@ class HidamariServer(object):
         <method name='start_playback'/>
         <method name="reload"/>
         <method name="feeling_lucky"/>
-        <method name='show_gui'/>
         <method name='quit'/>
         <property name="mode" type="s" access="read"/>
         <property name="volume" type="i" access="readwrite"/>
@@ -68,7 +63,6 @@ class HidamariServer(object):
 
         # Processes
         mp.set_start_method("spawn")
-        self.gui_process = None
         self.sys_icon_process = None
         self.player_process = None
 
@@ -86,10 +80,6 @@ class HidamariServer(object):
 
         # Player process
         self.reload()
-
-        # Show main GUI
-        if not args.background:
-            self.show_gui()
 
         logger.info("[Server] Started")
 
@@ -184,19 +174,13 @@ class HidamariServer(object):
             self._save_config()
             self.video(video_path)
 
-    def show_gui(self):
-        """Show main GUI"""
-        self.gui_process = Process(target=gui_main, args=(
-            self.version, self.pkgdatadir, self.localedir,))
-        self.gui_process.start()
-
     def quit(self):
         try:
             self._quit_player()
         except GLib.Error:
             pass
         # Quit all processes
-        for process in [self.player_process, self.gui_process, self.sys_icon_process]:
+        for process in [self.player_process, self.sys_icon_process]:
             if process:
                 process.terminate()
         loop.quit()
@@ -293,15 +277,12 @@ def get_instance(dbus_name):
 
 def main(version, pkgdatadir, localedir, args):
     server = get_instance(DBUS_NAME_SERVER)
-    if server is not None:
-        server.show_gui()
-    else:
-        # Pause before launching
-        time.sleep(args.p)
-        bus = SessionBus()
-        server = HidamariServer(version, pkgdatadir, localedir, args)
-        try:
-            bus.publish(DBUS_NAME_SERVER, server)
-            loop.run()
-        except RuntimeError:
-            raise Exception("Failed to create server")
+    # Pause before launching
+    time.sleep(args.p)
+    bus = SessionBus()
+    server = HidamariServer(version, pkgdatadir, localedir, args)
+    try:
+        bus.publish(DBUS_NAME_SERVER, server)
+        loop.run()
+    except RuntimeError:
+        raise Exception("Failed to create server")

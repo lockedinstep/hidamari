@@ -29,7 +29,6 @@ hidamari_sources = [
   '__init__.py',
   '__main__.py',
   'commons.py',
-  'menu.py',
   'server.py',
   'utils.py',
   'yt_utils.py'

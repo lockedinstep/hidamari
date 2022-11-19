@@ -20,13 +20,11 @@ try:
     import os
     sys.path.insert(1, os.path.join(sys.path[0], '..'))
     from player.base_player import BasePlayer
-    from menu import build_menu
     from commons import *
     from utils import ActiveHandler, ConfigUtil, is_gnome, is_wayland, is_nvidia_proprietary, is_vdpau_ok, is_flatpak
     from yt_utils import get_formats, get_best_audio, get_optimal_video
 except ModuleNotFoundError:
     from hidamari.player.base_player import BasePlayer
-    from hidamari.menu import build_menu
     from hidamari.commons import *
     from hidamari.utils import ActiveHandler, ConfigUtil, is_gnome, is_wayland, is_nvidia_proprietary, is_vdpau_ok, is_flatpak
     from hidamari.yt_utils import get_formats, get_best_audio, get_optimal_video
@@ -112,9 +110,6 @@ class PlayerWindow(Gtk.ApplicationWindow):
         # A timer that handling fade-in/out
         self.fade = Fade()
 
-        self.menu = None
-        self.connect("button-press-event", self._on_button_press_event)
-
     def play(self):
         self.__vlc_widget.player.play()
 
@@ -196,14 +191,6 @@ class PlayerWindow(Gtk.ApplicationWindow):
 
     def add_audio_track(self, audio):
         self.__vlc_widget.player.add_slave(vlc.MediaSlaveType(1), audio, True)
-
-    def _on_button_press_event(self, widget, event):
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
-            if not self.menu:
-                self.menu = build_menu(MODE_VIDEO)
-            self.menu.popup_at_pointer()
-            return True
-        return False
 
 
 class VideoPlayer(BasePlayer):
